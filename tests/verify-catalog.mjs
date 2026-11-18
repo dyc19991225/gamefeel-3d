@@ -16,6 +16,8 @@ const requiredFiles = [
   '.claude-plugin/plugin.json',
   '.codex-plugin/plugin.json',
   'docs/CATALOG.md',
+  'docs/readme/hero-deflect.png',
+  'docs/readme/showcase-cww.png',
   'README.md',
 ];
 

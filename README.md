@@ -1,3 +1,10 @@
+<p align="center">
+  <img src="docs/readme/hero-deflect.png" width="900" alt="gamefeel-3d live studio: Tamahagane Perfect Deflect 3D sparks, shockwave ring, live Trauma² & TimeScale oscilloscope, and parameter sliders" />
+</p>
+<p align="center">
+  <img src="docs/readme/showcase-cww.png" width="900" alt="gamefeel-3d English mode: CWW Double-Jet 312 km/h speed-lines, +22° FOV warp oscilloscope, and Codex $gamefeel-3d starter prompts" />
+</p>
+
 # gamefeel-3d ⚡
 
 **24 zero-asset procedural 3D game-feel recipes in Three.js, GLSL & WebAudio — plus an Agent Skill that stops coding agents from shipping lifeless "plastic" 3D games.**
