@@ -1,0 +1,6 @@
+{
+  "name": "gamefeel-3d",
+  "description": "24 zero-asset procedural 3D game-feel recipes (Three.js + GLSL + WebAudio) for visceral shooting, melee deflects, hitstop, arcade drifting, and trauma camera rigs.",
+  "version": "1.0.0",
+  "skills": "./skills/"
+}
