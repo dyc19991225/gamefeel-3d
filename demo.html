@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>实战对比演示：普通 AI 代码 vs 注入 $gamefeel-3d 之后</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #07090e; color: #f1f5f9; font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+      #stage { position: fixed; inset: 0; }
+      #hud2d { position: fixed; inset: 0; pointer-events: none; }
+
+      .top-dock {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 20;
+      }
+      .ab-giant {
+        display: flex; background: rgba(9, 12, 18, 0.92); border: 2px solid #334155;
+        border-radius: 12px; padding: 4px; gap: 4px; backdrop-filter: blur(10px);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+      }
+      .mode-btn {
+        border: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 800;
+        cursor: pointer; color: #94a3b8; background: transparent; transition: all 0.15s ease;
+      }
+      .mode-btn.on-raw { background: #475569; color: #ffffff; }
+      .mode-btn.on-gf {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #090b10;
+        box-shadow: 0 0 24px rgba(245, 158, 11, 0.45);
+      }
+      .sub-tip {
+        font-size: 12px; color: #cbd5e1; background: rgba(9, 12, 18, 0.82);
+        border: 1px solid #242f45; padding: 5px 14px; border-radius: 999px;
+      }
+
+      .back-link {
+        position: fixed; top: 18px; left: 18px; z-index: 20;
+        background: rgba(15, 20, 30, 0.9); border: 1px solid #2d3a54; color: #e2e8f0;
+        text-decoration: none; font-size: 12.5px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+      }
+      .back-link:hover { border-color: #f59e0b; color: #f59e0b; }
+
+      .recipe-feed {
+        position: fixed; top: 18px; right: 18px; z-index: 20; width: 255px;
+        background: rgba(10, 13, 20, 0.88); border: 1px solid #263248; border-radius: 10px;
+        padding: 12px; backdrop-filter: blur(8px);
+      }
+      .rf-title { font-size: 11px; font-family: Consolas, monospace; color: #94a3b8; margin-bottom: 8px; font-weight: 700; }
+      .rf-grid { display: flex; flex-direction: column; gap: 5px; }
+      .rf-chip {
+        display: flex; justify-content: space-between; font-size: 11.5px; padding: 5px 8px;
+        border-radius: 5px; background: #0d1119; border: 1px solid #1c2536; color: #64748b;
+        transition: all 0.08s ease; font-family: Consolas, 'Microsoft YaHei', monospace;
+      }
+      .rf-chip.lit {
+        background: rgba(245, 158, 11, 0.18); border-color: #f59e0b; color: #fde68a;
+        transform: translateX(-3px);
+      }
+
+      .bottom-bar {
+        position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 20;
+        display: flex; align-items: center; gap: 12px; background: rgba(10, 13, 20, 0.9);
+        border: 1px solid #263248; padding: 9px 18px; border-radius: 10px; font-size: 12.5px;
+      }
+      .auto-pill {
+        background: #10b981; color: #052e16; border: none; font-weight: 800;
+        padding: 5px 11px; border-radius: 6px; cursor: pointer; font-size: 12px;
+      }
+      .auto-pill.manual { background: #38bdf8; color: #082f49; }
+      .score-box { font-family: Consolas, monospace; color: #fbbf24; font-weight: 800; font-size: 13.5px; }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <canvas id="hud2d"></canvas>
+
+    <a class="back-link" href="./index.html">← 返回 24 配方实验室</a>
+
+    <div class="top-dock">
+      <div class="ab-giant">
+        <button class="mode-btn" id="btn-raw">🪨 普通 AI 直出代码 (塑料感 Before)</button>
+        <button class="mode-btn on-gf" id="btn-gf">⚡ 注入 $gamefeel-3d 之后 (街机爽感 After)</button>
+      </div>
+      <div class="sub-tip">按 <b>[Tab]</b> 随时一秒切换前后对比 · 点击画面立即开启震撼合成音效！</div>
+    </div>
+
+    <aside class="recipe-feed">
+      <div class="rf-title">LIVE ACTIVE RECIPES (实时触发配方)</div>
+      <div class="rf-grid" id="rf-grid">
+        <div class="rf-chip" id="tag-fps"><span>FPS-01/04</span><span>弹簧后坐 & 爆头叮</span></div>
+        <div class="rf-chip" id="tag-deflect"><span>ACT-01</span><span>34火星玉钢完美弹反</span></div>
+        <div class="rf-chip" id="tag-hitstop"><span>ACT-02</span><span>樱井非对称顿帧</span></div>
+        <div class="rf-chip" id="tag-trail"><span>ACT-03</span><span>子步插值 GLSL 刀光</span></div>
+        <div class="rf-chip" id="tag-witch"><span>CAM-02</span><span>魔女时间 & 低通深潜</span></div>
+        <div class="rf-chip" id="tag-shake"><span>CAM-01</span><span>Trauma² 旋转震屏</span></div>
+        <div class="rf-chip" id="tag-blast"><span>VFX-01/04</span><span>菲涅尔气浪 & 闪白</span></div>
+      </div>
+    </aside>
+
+    <div class="bottom-bar">
+      <button class="auto-pill" id="btn-pilot">🤖 自动战斗演示中 (点此或按 WASD 亲自接管)</button>
+      <span><b>WASD</b> 移动 · <b>左键</b> 速射 · <b>右键 / Space</b> 拔刀斩弹反敌弹 · <b>Shift</b> 极限冲刺</span>
+      <span class="score-box" id="score-readout">KILLS: 0 · COMBO: 0×</span>
+    </div>
+
+    <script type="module" src="/src/demo.ts"></script>
+  </body>
+</html>

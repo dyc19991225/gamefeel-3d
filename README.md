@@ -11,7 +11,7 @@
 
 **24 个零外部资产（0 张贴图 / 0 个模型 / 0 段 MP3）的纯代码 Web 3D 游戏打击感与手感配方库 + 在线实时 A/B 对比实验室 + 跨平台 Agent Skill（支持 Claude Code、Codex、Antigravity、Cursor）。**
 
-[**Live Interactive Studio**](https://dyc19991225.github.io/gamefeel-3d/) · [**Full 24-Recipe Catalog**](docs/CATALOG.md) · [**Agent Skill (`SKILL.md`)**](skills/gamefeel-3d/SKILL.md) · [**12-Rule Anti-Slop Checklist**](skills/gamefeel-3d/references/anti-slop-checklist.md)
+[**Live Interactive Studio**](https://dyc19991225.github.io/gamefeel-3d/) · [**Play Before/After Arena Mini-Game**](https://dyc19991225.github.io/gamefeel-3d/demo.html) · [**Full 24-Recipe Catalog**](docs/CATALOG.md) · [**Agent Skill (`SKILL.md`)**](skills/gamefeel-3d/SKILL.md)
 
 ---
 

@@ -208,6 +208,9 @@ export class GameFeelStudioApp {
         <span class="brand-sub">${zh ? '24 个零资产 Web 3D 打击感/手感配方 + Agent Skill' : '24 Zero-Asset 3D Game-Feel Recipes + Agent Skill'}</span>
       </div>
       <div class="topbar-controls">
+        <a class="chip-btn" href="./demo.html" style="border-color:var(--amber);color:var(--amber);font-weight:800">
+          🎮 ${zh ? '实战对比小游戏' : 'Play Arena Demo'}
+        </a>
         <div class="ab-pill" title="Shortcut: [R]">
           <button class="ab-btn ${this.juiceEnabled ? 'active-juice' : ''}" id="btn-juice-on">
             ⚡ ${zh ? 'GameFeel 开启' : 'GameFeel ON'}
