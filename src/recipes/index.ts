@@ -2,6 +2,9 @@ import type { CategoryId, CategoryMeta, RecipeDefinition } from '../core/types';
 import { fpsRecipes } from './fps';
 import { meleeRecipes } from './melee';
 import { racingRecipes } from './racing';
+import { platformRecipes } from './platform';
+import { lootRecipes } from './loot';
+import { worldRecipes } from './world';
 import { cameraRecipes } from './camera';
 import { vfxRecipes } from './vfx';
 import { audioRecipes } from './audio';
@@ -24,6 +27,24 @@ export const CATEGORIES: CategoryMeta[] = [
     icon: '🏎️',
     name: { zh: '街机漂移与极速感', en: 'Drift & Speed' },
     tagline: { zh: '侧滑三阶胎火、CWW 氮气广角、断位、悬挂挤压', en: 'Slip-angle drift, CWW FOV warp, cut-drift & suspension' },
+  },
+  {
+    id: 'platform',
+    icon: '🕹️',
+    name: { zh: '身法跳跃与残影跑酷', en: 'Platform & Parkour' },
+    tagline: { zh: '土狼缓冲跳、全息冲刺残影、抓钩摆荡、飞檐斜镜', en: 'Coyote jump, hologram ghosts, grapple & wall-run tilt' },
+  },
+  {
+    id: 'loot',
+    icon: '💎',
+    name: { zh: '刷宝爆装与肉鸽爽感', en: 'Loot & Roguelite' },
+    tagline: { zh: '传奇橙光柱喷泉、反推磁吸经验潮、升级新星、开箱蓄力', en: 'Legendary sky-beam, push-back magnet, level nova & chest' },
+  },
+  {
+    id: 'world',
+    icon: '🌍',
+    name: { zh: '物理碎裂、草水与震动', en: 'Destruction & World' },
+    tagline: { zh: '27块实时爆碎、GPU压弯草海、干涉水面、手柄双震', en: '27-shard shatter, GPU grass bend, water ripples & haptics' },
   },
   {
     id: 'camera',
@@ -49,6 +70,9 @@ export const ALL_RECIPES: RecipeDefinition[] = [
   ...fpsRecipes,
   ...meleeRecipes,
   ...racingRecipes,
+  ...platformRecipes,
+  ...lootRecipes,
+  ...worldRecipes,
   ...cameraRecipes,
   ...vfxRecipes,
   ...audioRecipes,

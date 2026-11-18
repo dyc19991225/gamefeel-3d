@@ -1,6 +1,6 @@
-# Complete Catalog — 24 Zero-Asset 3D Game-Feel Recipes
+# Complete Catalog — 36 Zero-Asset 3D Game-Feel Recipes
 
-Every recipe in `src/recipes/` is acted out live in Three.js + GLSL + WebAudio with zero external image, 3D model, or sound files.
+Every recipe in `src/recipes/` is acted out live in Three.js + GLSL + WebAudio with zero external image, 3D model, or sound files, and exports both **Vanilla Three.js (`.ts`)** and **React Three Fiber (`.tsx`)**.
 
 | Badge | ID | Category | Recipe (EN / 中文) | Key Technique |
 | :--- | :--- | :--- | :--- | :--- |
@@ -17,6 +17,18 @@ Every recipe in `src/recipes/` is acted out live in Three.js + GLSL + WebAudio w
 | `RACE-02` | `cww-nitro-fov-warp` | `racing` | **CWW Double-Jet & Speed-Line FOV Warp**<br>CWW 双喷氮气状态机与速度线广角畸变 | `C -> CW -> CWW` speed-cap break (`312 km/h`), `+22°` FOV warp & radial speed-lines |
 | `RACE-03` | `cut-drift-snap` | `racing` | **Cut-Drift Counter-Steer Nose Snap**<br>断位拉车头瞬回正与双喷窗口 | Counter-steer tap snaps `velYaw` `82%` to nose heading + instant double mini-boost |
 | `RACE-04` | `suspension-landing-squash` | `racing` | **Hang-Time Pitch & Landing Squash**<br>飞跃滞空仰角与落地悬挂压缩回弹 | Airborne pitch + volume-preserving chassis spring squash + landing boost |
+| `PLT-01` | `coyote-buffer-jump` | `platform` | **Coyote Time, Jump Buffer & Squash Arc**<br>土狼时间、输入缓冲与非对称快落重力 | `110ms` ledge grace + `120ms` pre-land buffer + `2.15×` fast-fall gravity |
+| `PLT-02` | `ghost-dash-afterimage` | `platform` | **Sandevistan Hologram Dash Ghosts**<br>全息幻影冲刺残影链（边缘行者风） | 8 equidistant cyan-to-violet additive pose silhouettes fading over `0.42s` |
+| `PLT-03` | `grapple-pendulum-swing` | `platform` | **Grapple Tension Swing & Launch Boost**<br>抓钩摆荡张力与脱钩切向弹射 | Radial rope velocity projection + `1.45×` tangential launch impulse |
+| `PLT-04` | `wallrun-tilt-kickoff` | `platform` | **Wall-Run 14° Tilt & Kick-Off Sparks**<br>贴墙飞檐走壁 14° 斜镜与蹬墙跳 | `22%` wall gravity + `14°` outward Dutch roll + normal+upward kick-off |
+| `LOT-01` | `legendary-loot-fountain` | `loot` | **Diablo Loot Fountain & Sky-Beam**<br>爆装喷泉与传奇冲天金色光柱 | Parabolic 2-bounce drops + additive GLSL vertical beam + 6-note harp arpeggio |
+| `LOT-02` | `magnet-xp-vacuum` | `loot` | **Push-Back Anticipation XP Vacuum**<br>反推蓄势磁吸经验潮与连音阶梯 | `0.14s` outward push-back -> accelerating homing + pitch-climbing pop synth |
+| `LOT-03` | `levelup-golden-nova` | `loot` | **Level-Up Golden Nova & Major-9th Chord**<br>升级圣光新星推怪震波与大九和弦庆典 | `0.32s` celebratory slow-mo + `3.8m` radial mob knockback + 6-voice chord |
+| `LOT-04` | `chest-anticipation-jackpot` | `loot` | **Chest Anticipation Shake & Jackpot Pop**<br>宝箱蓄力颤抖挤压与大爆奖喷射 | `0.55s` accelerating volume-preserving squash rumble before explosive lid pop |
+| `WLD-01` | `procedural-voronoi-shatter` | `world` | **Zero-Asset 27-Shard Mesh Shatter**<br>零模型 3×3×3 实时爆碎与地面弹跳 | Subdivides AABB into 27 tumbling, floor-bouncing shards (`0.48` restitution) |
+| `WLD-02` | `interactive-foliage-bend` | `world` | **1-DrawCall GPU Grass Wind & Trample**<br>GPU 实例化草海与角色穿梭压弯着色器 | 900 `InstancedMesh` blades displaced radially around player in GLSL vertex shader |
+| `WLD-03` | `water-impact-ripples` | `world` | **Analytic Multi-Ripple Specular Water**<br>零贴图多波源干涉动态水面涟漪 | 4 overlapping analytic wave rings computing specular normals from XY derivatives |
+| `WLD-04` | `gamepad-dual-rumble` | `world` | **Web Gamepad Dual-Motor Haptics Forge**<br>手柄大小双马达非对称触觉震动锻造台 | Native `vibrationActuator` pairing left low-freq thump with right high-freq buzz |
 | `CAM-01` | `perlin-trauma-shake` | `camera` | **GDC Trauma² Rotational Shake**<br>Trauma² 三轴旋转平滑震屏 vs 劣质随机抖动 | Squirrel Eiserloh's `shake = trauma²` smooth 3-axis rotational noise |
 | `CAM-02` | `bullet-time-chromatic` | `camera` | **Witch-Time Dilation & Lowpass Muffle**<br>魔女时间变速与全局音频低通深潜 | `0.14×` world clock synchronized with `680 Hz` WebAudio master lowpass sweep |
 | `CAM-03` | `impact-zoom-punch` | `camera` | **Sub-120ms Crit Zoom-Punch & Dutch Roll**<br>零穿模暴击瞬推变焦与荷兰角斜踢 | Under-damped FOV velocity kick + alternating `±9°` Z-axis roll impulse |

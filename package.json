@@ -1,14 +1,18 @@
 {
   "name": "gamefeel-3d",
-  "version": "1.0.0",
-  "description": "24 zero-asset procedural 3D game-feel recipes (Three.js + WebAudio + GLSL) with live A/B studio & Agent Skill for Claude Code, Codex, and Antigravity.",
+  "version": "2.0.0",
+  "description": "36 zero-asset procedural 3D game-feel recipes (Three.js, R3F, GLSL & WebAudio) with live A/B studio, Feel Kit bundler, CLI doctor & Agent Skill.",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "gamefeel-3d": "./bin/gamefeel-doctor.mjs"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "node tests/verify-catalog.mjs"
+    "test": "node tests/verify-catalog.mjs",
+    "doctor": "node bin/gamefeel-doctor.mjs ."
   },
   "keywords": [
     "threejs",

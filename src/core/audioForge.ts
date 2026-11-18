@@ -479,4 +479,80 @@ export class AudioForge {
       0.36
     );
   }
+
+  public playJump(doubleJump = false): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    this.pitchDrop(this.lowpassBus, t, doubleJump ? 290 : 185, doubleJump ? 820 : 540, 0.16, 'sine', 0.28);
+    this.noiseBurst(this.lowpassBus, t, 0.09, doubleJump ? 2100 : 1350, 1.8, 'bandpass', 0.22);
+  }
+
+  public playLootArpeggio(legendary = true): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    const notes = legendary ? [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98] : [440, 554.37, 659.25];
+    notes.forEach((f, i) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      osc.type = i % 2 === 0 ? 'triangle' : 'sine';
+      const st = t + i * 0.048;
+      osc.frequency.setValueAtTime(f, st);
+      g.gain.setValueAtTime(0.24, st);
+      g.gain.exponentialRampToValueAtTime(0.0008, st + 0.55);
+      osc.connect(g).connect(this.lowpassBus!);
+      if (this.reverbNode) g.connect(this.reverbNode);
+      osc.start(st);
+      osc.stop(st + 0.58);
+    });
+  }
+
+  public playXpOrbPop(chainIndex = 0): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    const base = 440 * Math.pow(2, ((chainIndex % 16) * 0.85) / 12);
+    this.pitchDrop(this.lowpassBus, t, base * 0.85, base * 1.42, 0.075, 'sine', 0.22);
+  }
+
+  public playLevelUpChord(): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    this.pitchDrop(this.lowpassBus, t, 140, 42, 0.45, 'sine', 0.55);
+    [261.63, 329.63, 392.0, 493.88, 587.33, 783.99].forEach((f, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const g = this.ctx!.createGain();
+      osc.type = idx < 2 ? 'sawtooth' : 'triangle';
+      osc.frequency.setValueAtTime(f, t + 0.02);
+      g.gain.setValueAtTime(0.01, t);
+      g.gain.linearRampToValueAtTime(0.16, t + 0.09);
+      g.gain.exponentialRampToValueAtTime(0.0008, t + 1.35);
+      osc.connect(g).connect(this.lowpassBus!);
+      if (this.reverbNode) g.connect(this.reverbNode);
+      osc.start(t);
+      osc.stop(t + 1.4);
+    });
+  }
+
+  public playCrystalShatter(): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    this.playHeavyImpact(1.0);
+    this.noiseBurst(this.lowpassBus, t, 0.22, 3800, 1.4, 'highpass', 0.52);
+    [1960, 2680, 3540, 4620, 5840].forEach((f, i) => {
+      const dt = i * 0.024 + Math.random() * 0.02;
+      this.pitchDrop(this.lowpassBus!, t + dt, f, f * 0.72, 0.16, 'sine', 0.22);
+    });
+  }
+
+  public playWaterSplash(): void {
+    this.unlock();
+    if (!this.ctx || !this.lowpassBus) return;
+    const t = this.ctx.currentTime;
+    this.noiseBurst(this.lowpassBus, t, 0.32, 680, 1.6, 'bandpass', 0.55);
+    this.pitchDrop(this.lowpassBus, t, 240, 490, 0.18, 'sine', 0.25);
+  }
 }

@@ -1,9 +1,17 @@
 import * as THREE from 'three';
 import { AudioForge } from '../core/audioForge';
+import { buildCombinedSkillPrompt, buildFeelKitBundle, generateR3fSnippet } from '../core/r3fAdapter';
 import { StudioStage } from '../core/stage';
 import type { CategoryId, Locale, RecipeDefinition, RecipeInstance, TelemetryFrame } from '../core/types';
 import { VfxForge } from '../core/vfxForge';
 import { ALL_RECIPES, CATEGORIES } from '../recipes';
+
+const PRESET_BUNDLES: Record<string, string[]> = {
+  fps: ['recoil-kick-bloom', 'quick-scope-sniper', 'wallbang-penetration', 'headshot-kill-confirm', 'muzzle-tracer-casing', 'perlin-trauma-shake'],
+  sekiro: ['perfect-deflect-sparks', 'hitstop-freeze-shake', 'katana-ribbon-trail', 'posture-break-deathblow', 'perilous-kanji-mikiri', 'webaudio-blade-forge'],
+  roguelite: ['legendary-loot-fountain', 'magnet-xp-vacuum', 'levelup-golden-nova', 'damage-pop-numbers', 'hit-flash-rim-shader', 'ghost-dash-afterimage'],
+  racing: ['drift-slip-sparks', 'cww-nitro-fov-warp', 'cut-drift-snap', 'suspension-landing-squash', 'webaudio-engine-boost'],
+};
 
 export class GameFeelStudioApp {
   private locale: Locale = 'zh';
@@ -13,10 +21,14 @@ export class GameFeelStudioApp {
   private activeInstance: RecipeInstance | null = null;
   private activeGroup: THREE.Group | null = null;
   private paramValues: Record<string, number> = {};
+  private allSavedParams: Record<string, Record<string, number>> = {};
 
   private juiceEnabled = true;
   private autoDemo = true;
   private inspectorTab: 'params' | 'code' | 'skill' = 'params';
+  private codeStack: 'vanilla' | 'r3f' = 'vanilla';
+  private cartIds = new Set<string>(['perfect-deflect-sparks', 'hitstop-freeze-shake', 'perlin-trauma-shake']);
+  private cartOpen = false;
 
   private stage!: StudioStage;
   private audio = new AudioForge();
@@ -32,7 +44,6 @@ export class GameFeelStudioApp {
   private calloutTimer = 0;
   private hudStatEl!: HTMLElement;
 
-  // DOM containers for selective re-render
   private rootEl: HTMLElement;
   private topbarEl!: HTMLElement;
   private catalogEl!: HTMLElement;
@@ -40,6 +51,7 @@ export class GameFeelStudioApp {
   private actionBarEl!: HTMLElement;
   private inspectorEl!: HTMLElement;
   private teleLegendEl!: HTMLElement;
+  private cartModalMask!: HTMLElement;
 
   private lastTime = performance.now();
   private elapsed = 0;
@@ -78,6 +90,7 @@ export class GameFeelStudioApp {
           <aside class="inspector-pane" id="gf-inspector"></aside>
         </main>
       </div>
+      <div class="modal-mask" id="gf-cart-mask"></div>
     `;
 
     this.topbarEl = document.getElementById('gf-topbar')!;
@@ -87,6 +100,7 @@ export class GameFeelStudioApp {
     this.inspectorEl = document.getElementById('gf-inspector')!;
     this.teleLegendEl = document.getElementById('gf-tele-legend')!;
     this.calloutEl = document.getElementById('gf-callout')!;
+    this.cartModalMask = document.getElementById('gf-cart-mask')!;
 
     const vp = document.getElementById('gf-viewport')!;
     this.stage = new StudioStage(vp);
@@ -123,6 +137,10 @@ export class GameFeelStudioApp {
 
     window.addEventListener('keydown', (ev) => {
       if ((ev.target as HTMLElement)?.tagName === 'INPUT') return;
+      if (ev.code === 'Escape' && this.cartOpen) {
+        this.toggleCartModal(false);
+        return;
+      }
       if (ev.code === 'Space') {
         ev.preventDefault();
         this.audio.unlock();
@@ -143,6 +161,134 @@ export class GameFeelStudioApp {
     this.activeInstance?.trigger();
   }
 
+  private toggleCartItem(id: string): void {
+    if (this.cartIds.has(id)) this.cartIds.delete(id);
+    else this.cartIds.add(id);
+    this.renderTopbar();
+    this.renderCatalog();
+    this.renderInspector();
+    if (this.cartOpen) this.renderCartModal();
+  }
+
+  private toggleCartModal(open: boolean): void {
+    this.cartOpen = open;
+    this.cartModalMask.className = `modal-mask ${open ? 'open' : ''}`;
+    if (open) this.renderCartModal();
+  }
+
+  private renderCartModal(): void {
+    const zh = this.locale === 'zh';
+    const selected = ALL_RECIPES.filter((r) => this.cartIds.has(r.id));
+    const combinedPrompt = buildCombinedSkillPrompt(selected, this.locale);
+
+    this.cartModalMask.innerHTML = `
+      <div class="cart-modal">
+        <div class="cart-head">
+          <h3>🧰 ${zh ? `我的游戏手感组装车 (${selected.length} 项已选)` : `Feel Kit Builder (${selected.length} Selected)`}</h3>
+          <button class="chip-btn" id="btn-close-cart">✕</button>
+        </div>
+        <div class="cart-body">
+          <div>
+            <div style="font-size:12px;color:var(--text-2);margin-bottom:6px">${zh ? '一键套用流派全家桶预设：' : 'One-Click Genre Starter Bundles:'}</div>
+            <div class="preset-row">
+              <button class="chip-btn" data-preset="fps">🎯 ${zh ? 'FPS 射击全套 (6)' : 'FPS Bundle (6)'}</button>
+              <button class="chip-btn" data-preset="sekiro">⚔️ ${zh ? '只狼拼刀全套 (6)' : 'Sekiro Melee (6)'}</button>
+              <button class="chip-btn" data-preset="roguelite">💎 ${zh ? '肉鸽刷宝全套 (6)' : 'Roguelite Loot (6)'}</button>
+              <button class="chip-btn" data-preset="racing">🏎️ ${zh ? '街机飞车全套 (5)' : 'Arcade Kart (5)'}</button>
+              <button class="chip-btn" id="btn-clear-cart">${zh ? '清空' : 'Clear'}</button>
+            </div>
+          </div>
+
+          <div class="cart-chips">
+            ${
+              selected.length === 0
+                ? `<span style="font-size:12px;color:var(--text-2)">${zh ? '尚未勾选配方，可点击上方流派预设或在左侧目录点 + 号添加' : 'No recipes selected yet — pick a preset above or click + on any recipe card.'}</span>`
+                : selected
+                    .map(
+                      (r) => `
+                  <span class="cart-item-pill">
+                    ${r.badge} · ${this.t(r.title)}
+                    <button data-rm="${r.id}" title="Remove">×</button>
+                  </span>
+                `
+                    )
+                    .join('')
+            }
+          </div>
+
+          <div class="cart-actions">
+            <button class="fire-btn" id="btn-dl-kit" ${selected.length === 0 ? 'disabled' : ''}>
+              ⬇ ${zh ? `下载合并单文件 gamefeel-kit.ts (${selected.length} 配方)` : `Download gamefeel-kit.ts (${selected.length} Recipes)`}
+            </button>
+            <button class="sec-btn" id="btn-copy-kit-prompt" ${selected.length === 0 ? 'disabled' : ''}>
+              📋 ${zh ? '复制组合版 $gamefeel-3d 引导词' : 'Copy Combined $gamefeel-3d Prompt'}
+            </button>
+          </div>
+
+          ${
+            selected.length > 0
+              ? `<div class="code-card">
+                  <div class="code-card-head"><span>Combined Agent Skill Prompt Preview</span></div>
+                  <pre class="code-pre" id="cart-prompt-preview"></pre>
+                </div>`
+              : ''
+          }
+        </div>
+      </div>
+    `;
+
+    const preview = document.getElementById('cart-prompt-preview');
+    if (preview) preview.textContent = combinedPrompt;
+
+    this.cartModalMask.onclick = (e) => {
+      if (e.target === this.cartModalMask) this.toggleCartModal(false);
+    };
+    document.getElementById('btn-close-cart')!.onclick = () => this.toggleCartModal(false);
+    document.getElementById('btn-clear-cart')!.onclick = () => {
+      this.cartIds.clear();
+      this.renderTopbar();
+      this.renderCatalog();
+      this.renderCartModal();
+    };
+
+    this.cartModalMask.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((btn) => {
+      btn.onclick = () => {
+        const ids = PRESET_BUNDLES[btn.dataset.preset!] ?? [];
+        this.cartIds = new Set(ids);
+        this.renderTopbar();
+        this.renderCatalog();
+        this.renderInspector();
+        this.renderCartModal();
+      };
+    });
+
+    this.cartModalMask.querySelectorAll<HTMLButtonElement>('[data-rm]').forEach((btn) => {
+      btn.onclick = () => this.toggleCartItem(btn.dataset.rm!);
+    });
+
+    const dlBtn = document.getElementById('btn-dl-kit');
+    if (dlBtn && selected.length > 0) {
+      dlBtn.onclick = () => {
+        const content = buildFeelKitBundle(selected, this.allSavedParams);
+        const blob = new Blob([content], { type: 'text/typescript;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'gamefeel-kit.ts';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    const cpBtn = document.getElementById('btn-copy-kit-prompt');
+    if (cpBtn && selected.length > 0) {
+      cpBtn.onclick = () => {
+        void navigator.clipboard.writeText(combinedPrompt);
+        cpBtn.textContent = zh ? '✓ 组合引导词已复制!' : '✓ Combined Prompt Copied!';
+      };
+    }
+  }
+
   private selectRecipe(id: string): void {
     const found = ALL_RECIPES.find((r) => r.id === id) ?? ALL_RECIPES[0];
     if (this.activeInstance?.dispose) this.activeInstance.dispose();
@@ -158,8 +304,12 @@ export class GameFeelStudioApp {
     this.stage.resetFeelState();
 
     this.activeRecipe = found;
-    this.paramValues = {};
-    for (const p of found.params) this.paramValues[p.key] = p.defaultValue;
+    if (!this.allSavedParams[found.id]) {
+      const init: Record<string, number> = {};
+      for (const p of found.params) init[p.key] = p.defaultValue;
+      this.allSavedParams[found.id] = init;
+    }
+    this.paramValues = this.allSavedParams[found.id];
 
     this.activeGroup = new THREE.Group();
     this.stage.scene.add(this.activeGroup);
@@ -204,13 +354,16 @@ export class GameFeelStudioApp {
     this.topbarEl.innerHTML = `
       <div class="brand">
         <div class="brand-mark">GF</div>
-        <span class="brand-title">gamefeel-3d</span>
-        <span class="brand-sub">${zh ? '24 个零资产 Web 3D 打击感/手感配方 + Agent Skill' : '24 Zero-Asset 3D Game-Feel Recipes + Agent Skill'}</span>
+        <span class="brand-title">gamefeel-3d <small style="color:var(--amber);font-size:11px">v2.0</small></span>
+        <span class="brand-sub">${zh ? '36 个零资产 Web 3D 打击感配方 + R3F + CLI + Skill' : '36 Zero-Asset 3D Game-Feel Recipes + R3F + CLI + Skill'}</span>
       </div>
       <div class="topbar-controls">
         <a class="chip-btn" href="./demo.html" style="border-color:var(--amber);color:var(--amber);font-weight:800">
           🎮 ${zh ? '实战对比小游戏' : 'Play Arena Demo'}
         </a>
+        <button class="chip-btn on" id="btn-open-cart">
+          🧰 ${zh ? `手感购物车 (${this.cartIds.size})` : `Feel Kit (${this.cartIds.size})`}
+        </button>
         <div class="ab-pill" title="Shortcut: [R]">
           <button class="ab-btn ${this.juiceEnabled ? 'active-juice' : ''}" id="btn-juice-on">
             ⚡ ${zh ? 'GameFeel 开启' : 'GameFeel ON'}
@@ -220,17 +373,18 @@ export class GameFeelStudioApp {
           </button>
         </div>
         <button class="chip-btn ${this.autoDemo ? 'on' : ''}" id="btn-autodemo">
-          ${this.autoDemo ? '🔁 AUTO: ON' : '⏸ AUTO: OFF'}
+          ${this.autoDemo ? '🔁 AUTO' : '⏸ PAUSED'}
         </button>
         <button class="chip-btn" id="btn-mute">
-          ${this.audio.isMuted() ? '🔇 MUTED' : '🔊 AUDIO'}
+          ${this.audio.isMuted() ? '🔇' : '🔊'}
         </button>
         <button class="chip-btn" id="btn-locale">
-          ${zh ? 'EN / 中文' : '中文 / EN'}
+          ${zh ? 'EN' : '中文'}
         </button>
       </div>
     `;
 
+    document.getElementById('btn-open-cart')!.onclick = () => this.toggleCartModal(true);
     document.getElementById('btn-juice-on')!.onclick = () => {
       this.juiceEnabled = true;
       this.renderTopbar();
@@ -287,23 +441,26 @@ export class GameFeelStudioApp {
       </div>
       <div class="search-box">
         <input id="gf-search" type="text" value="${this.searchQuery}" placeholder="${
-          zh ? '搜索手感配方（如 deflect / recoil / drift / hitstop）...' : 'Search recipes (deflect, recoil, drift, hitstop)...'
+          zh ? '搜索 36 项配方（如 deflect / loot / shatter / coyote）...' : 'Search 36 recipes (deflect, loot, shatter, coyote)...'
         }" />
       </div>
       <div class="recipe-list">
         ${list
-          .map(
-            (r) => `
-          <button class="recipe-card ${r.id === this.activeRecipe.id ? 'selected' : ''}" data-rid="${r.id}">
-            <div class="rc-top">
-              <span class="rc-badge">${r.badge}</span>
-              <span style="font-size:11px;color:var(--text-2);font-family:var(--mono)">${r.category.toUpperCase()}</span>
+          .map((r) => {
+            const inCart = this.cartIds.has(r.id);
+            return `
+            <div class="recipe-card ${r.id === this.activeRecipe.id ? 'selected' : ''}" data-rid="${r.id}">
+              <div class="rc-top">
+                <span class="rc-badge">${r.badge}</span>
+                <button class="rc-cart-mini ${inCart ? 'in-cart' : ''}" data-addcart="${r.id}">
+                  ${inCart ? (zh ? '✓ 已加包' : '✓ In Kit') : (zh ? '+ 加入包' : '+ Add Kit')}
+                </button>
+              </div>
+              <div class="rc-title">${this.t(r.title)}</div>
+              <div class="rc-sub">${this.t(r.subtitle)}</div>
             </div>
-            <div class="rc-title">${this.t(r.title)}</div>
-            <div class="rc-sub">${this.t(r.subtitle)}</div>
-          </button>
-        `
-          )
+          `;
+          })
           .join('')}
       </div>
     `;
@@ -315,10 +472,18 @@ export class GameFeelStudioApp {
       };
     });
 
-    this.catalogEl.querySelectorAll<HTMLButtonElement>('[data-rid]').forEach((btn) => {
-      btn.onclick = () => {
+    this.catalogEl.querySelectorAll<HTMLElement>('[data-rid]').forEach((card) => {
+      card.onclick = (e) => {
+        if ((e.target as HTMLElement).closest('[data-addcart]')) return;
         this.audio.unlock();
-        this.selectRecipe(btn.dataset.rid!);
+        this.selectRecipe(card.dataset.rid!);
+      };
+    });
+
+    this.catalogEl.querySelectorAll<HTMLButtonElement>('[data-addcart]').forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        this.toggleCartItem(btn.dataset.addcart!);
       };
     });
 
@@ -375,10 +540,14 @@ export class GameFeelStudioApp {
   private renderInspector(): void {
     const r = this.activeRecipe;
     const zh = this.locale === 'zh';
+    const inCart = this.cartIds.has(r.id);
 
     let bodyHtml = '';
     if (this.inspectorTab === 'params') {
       bodyHtml = `
+        <button class="chip-btn ${inCart ? 'on' : ''}" id="btn-insp-cart" style="width:100%;padding:8px">
+          ${inCart ? (zh ? '✓ 已在手感购物车中（点击移出）' : '✓ In Feel Kit (Click to Remove)') : (zh ? '🧰 + 将当前配方加入手感购物车' : '🧰 + Add Recipe to Feel Kit')}
+        </button>
         <div class="insight-box">
           <div class="insight-label" style="color:var(--amber)">✦ ${zh ? '为什么有打击感 / 爽感原理' : 'WHY IT FEELS GOOD'}</div>
           <p>${this.t(r.whyItMatters)}</p>
@@ -404,13 +573,25 @@ export class GameFeelStudioApp {
             .join('')}
         </div>
       `;
+      setTimeout(() => {
+        const b = document.getElementById('btn-insp-cart');
+        if (b) b.onclick = () => this.toggleCartItem(r.id);
+      }, 0);
     } else if (this.inspectorTab === 'code') {
-      const snippet = r.generateCode(this.paramValues);
+      const snippet =
+        this.codeStack === 'vanilla'
+          ? r.generateCode(this.paramValues)
+          : generateR3fSnippet(r, this.paramValues);
+      const ext = this.codeStack === 'vanilla' ? 'ts' : 'tsx';
       bodyHtml = `
+        <div class="stack-switch">
+          <button class="stack-btn ${this.codeStack === 'vanilla' ? 'on' : ''}" data-stack="vanilla">Vanilla Three.js (.ts)</button>
+          <button class="stack-btn ${this.codeStack === 'r3f' ? 'on' : ''}" data-stack="r3f">React Three Fiber (.tsx)</button>
+        </div>
         <div class="code-card">
           <div class="code-card-head">
-            <span>${r.id}.ts (Zero-Dependency)</span>
-            <button class="copy-btn" id="btn-copy-code">${zh ? '复制 TS 源码' : 'Copy TS'}</button>
+            <span>${r.id}.${ext}</span>
+            <button class="copy-btn" id="btn-copy-code">${zh ? '复制代码' : 'Copy Code'}</button>
           </div>
           <pre class="code-pre" id="gf-code-block"></pre>
         </div>
@@ -418,61 +599,63 @@ export class GameFeelStudioApp {
       setTimeout(() => {
         const pre = document.getElementById('gf-code-block');
         if (pre) pre.textContent = snippet;
+        this.inspectorEl.querySelectorAll<HTMLButtonElement>('[data-stack]').forEach((sb) => {
+          sb.onclick = () => {
+            this.codeStack = sb.dataset.stack as 'vanilla' | 'r3f';
+            this.renderInspector();
+          };
+        });
         const copyBtn = document.getElementById('btn-copy-code');
         if (copyBtn) {
           copyBtn.onclick = () => {
             void navigator.clipboard.writeText(snippet);
             copyBtn.textContent = zh ? '✓ 已复制!' : '✓ Copied!';
-            setTimeout(() => (copyBtn.textContent = zh ? '复制 TS 源码' : 'Copy TS'), 1400);
+            setTimeout(() => (copyBtn.textContent = zh ? '复制代码' : 'Copy Code'), 1400);
           };
         }
       }, 0);
     } else {
       const installCmd = `npx skills add dyc19991225/gamefeel-3d`;
+      const doctorCmd = `npx github:dyc19991225/gamefeel-3d doctor ./my-game`;
       const codexPrompt = zh
         ? `$gamefeel-3d ${this.t(r.agentPrompt).replace(/^使用 gamefeel-3d 技能：/, '')}`
         : `$gamefeel-3d ${this.t(r.agentPrompt).replace(/^Use gamefeel-3d skill:\s*/i, '')}`;
-      const auditPrompt = zh
-        ? `$gamefeel-3d 对照 12 条反塑料感清单扫描我当前的 Three.js 项目，列出最缺失的手感通道，并按优先级逐项升级（震屏、顿帧、弹簧反馈与零 MP3 合成音效）。`
-        : `$gamefeel-3d Audit my current Three.js project against the 12-rule anti-slop checklist, rank the top missing feel channels, and upgrade them step by step.`;
       bodyHtml = `
         <div class="code-card">
           <div class="code-card-head">
             <span>1. ${zh ? '安装 Skill（Codex / Claude / AGY）' : 'Install Skill (Codex / Claude / AGY)'}</span>
-            <button class="copy-btn" id="btn-copy-install">${zh ? '复制命令' : 'Copy'}</button>
+            <button class="copy-btn" id="btn-copy-install">${zh ? '复制' : 'Copy'}</button>
           </div>
           <pre class="code-pre">${installCmd}</pre>
         </div>
         <div class="code-card">
           <div class="code-card-head">
-            <span>2. ${zh ? 'Codex 风格当前配方引导词 ($gamefeel-3d)' : 'Codex-Style Recipe Prompt ($gamefeel-3d)'}</span>
-            <button class="copy-btn" id="btn-copy-prompt">${zh ? '复制引导词' : 'Copy Prompt'}</button>
+            <span>2. ${zh ? 'CLI 给本地项目打手感体检分 (0-100)' : 'CLI Project GameFeel Doctor (0-100)'}</span>
+            <button class="copy-btn" id="btn-copy-doc">${zh ? '复制' : 'Copy'}</button>
           </div>
-          <pre class="code-pre" id="gf-prompt-block"></pre>
+          <pre class="code-pre">${doctorCmd}</pre>
         </div>
         <div class="code-card">
           <div class="code-card-head">
-            <span>3. ${zh ? '全项目诊断改造引导词（通用）' : 'Full-Project Audit Starter Prompt'}</span>
-            <button class="copy-btn" id="btn-copy-audit">${zh ? '复制诊断词' : 'Copy Audit'}</button>
+            <span>3. ${zh ? 'Codex 风格当前配方引导词 ($gamefeel-3d)' : 'Codex-Style Recipe Prompt ($gamefeel-3d)'}</span>
+            <button class="copy-btn" id="btn-copy-prompt">${zh ? '复制引导词' : 'Copy Prompt'}</button>
           </div>
-          <pre class="code-pre" id="gf-audit-block"></pre>
+          <pre class="code-pre" id="gf-prompt-block"></pre>
         </div>
       `;
       setTimeout(() => {
         const pBlock = document.getElementById('gf-prompt-block');
         if (pBlock) pBlock.textContent = codexPrompt;
-        const aBlock = document.getElementById('gf-audit-block');
-        if (aBlock) aBlock.textContent = auditPrompt;
         document.getElementById('btn-copy-install')!.onclick = (e) => {
           void navigator.clipboard.writeText(installCmd);
           (e.target as HTMLElement).textContent = '✓';
         };
+        document.getElementById('btn-copy-doc')!.onclick = (e) => {
+          void navigator.clipboard.writeText(doctorCmd);
+          (e.target as HTMLElement).textContent = '✓';
+        };
         document.getElementById('btn-copy-prompt')!.onclick = (e) => {
           void navigator.clipboard.writeText(codexPrompt);
-          (e.target as HTMLElement).textContent = zh ? '✓ 已复制!' : '✓ Copied!';
-        };
-        document.getElementById('btn-copy-audit')!.onclick = (e) => {
-          void navigator.clipboard.writeText(auditPrompt);
           (e.target as HTMLElement).textContent = zh ? '✓ 已复制!' : '✓ Copied!';
         };
       }, 0);
@@ -484,10 +667,10 @@ export class GameFeelStudioApp {
           🎛️ ${zh ? '实时调参' : 'Live Params'}
         </button>
         <button class="tab-btn ${this.inspectorTab === 'code' ? 'active' : ''}" data-tab="code">
-          📦 ${zh ? '独立源码' : 'Recipe TS'}
+          📦 ${zh ? 'TS / R3F 源码' : 'TS / R3F Code'}
         </button>
         <button class="tab-btn ${this.inspectorTab === 'skill' ? 'active' : ''}" data-tab="skill">
-          🤖 ${zh ? 'AI 技能调用' : 'Agent Skill'}
+          🤖 ${zh ? 'Skill & CLI' : 'Skill & CLI'}
         </button>
       </div>
       <div class="inspector-body">${bodyHtml}</div>
@@ -518,7 +701,6 @@ export class GameFeelStudioApp {
     const h = this.hudCanvas.height;
     g.clearRect(0, 0, w, h);
 
-    // 1. Vignette (bullet-time / perilous tension)
     if (this.stage.vignetteIntensity > 0.01) {
       const grad = g.createRadialGradient(w / 2, h / 2, h * 0.22, w / 2, h / 2, Math.max(w, h) * 0.68);
       grad.addColorStop(0, 'rgba(0,0,0,0)');
@@ -527,7 +709,6 @@ export class GameFeelStudioApp {
       g.fillRect(0, 0, w, h);
     }
 
-    // 2. Radial Speed Lines (N2O / CWW boost)
     if (this.stage.speedLinesIntensity > 0.02) {
       g.save();
       g.translate(w / 2, h / 2);
@@ -546,7 +727,6 @@ export class GameFeelStudioApp {
       g.restore();
     }
 
-    // 3. Directional Damage Indicator Red Arc
     if (this.stage.damageArcAlpha > 0.02) {
       g.save();
       g.translate(w / 2, h / 2);
@@ -559,7 +739,6 @@ export class GameFeelStudioApp {
       g.restore();
     }
 
-    // 4. Dynamic FPS Crosshair
     if (this.stage.crosshairGap > 0) {
       const cx = w / 2;
       const cy = h / 2;

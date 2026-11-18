@@ -148,8 +148,8 @@ export class StudioStage {
     this.camera.position.copy(this.curCamPos);
     if (this.naiveJitterMode && shake > 0.0001) {
       // Bad naive random XYZ translation jitter (for side-by-side comparison)
-      this.camera.position.x += (Math.random() * 2 - 1) * this.trauma * 0.45;
-      this.camera.position.y += (Math.random() * 2 - 1) * this.trauma * 0.45;
+      this.camera.position.x += (Math.random() * 2 - 1) * this.trauma * 0.45; // doctor-ignore
+      this.camera.position.y += (Math.random() * 2 - 1) * this.trauma * 0.45; // doctor-ignore
       this.camera.lookAt(this.curLookAt);
     } else {
       this.camera.lookAt(this.curLookAt);

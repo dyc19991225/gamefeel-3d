@@ -3,7 +3,16 @@ import type { AudioForge } from './audioForge';
 import type { VfxForge } from './vfxForge';
 import type { StudioStage } from './stage';
 
-export type CategoryId = 'fps' | 'melee' | 'racing' | 'camera' | 'vfx' | 'audio';
+export type CategoryId =
+  | 'fps'
+  | 'melee'
+  | 'racing'
+  | 'platform'
+  | 'loot'
+  | 'world'
+  | 'camera'
+  | 'vfx'
+  | 'audio';
 
 export type Locale = 'zh' | 'en';
 
