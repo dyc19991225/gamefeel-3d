@@ -1,0 +1,4 @@
+interface:
+  display_name: "GameFeel 3D"
+  short_description: "24 zero-asset 3D game-feel recipes, GLSL trails & WebAudio synths"
+  default_prompt: "Use $gamefeel-3d to audit my Three.js game against the 12-rule anti-slop checklist and inject visceral hitstop, Trauma² camera shake, spring recoil/drift physics, and zero-MP3 WebAudio SFX."

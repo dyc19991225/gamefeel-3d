@@ -1,6 +1,21 @@
 {
   "name": "gamefeel-3d",
-  "description": "24 zero-asset procedural 3D game-feel recipes (Three.js + GLSL + WebAudio) for visceral shooting, melee deflects, hitstop, arcade drifting, and trauma camera rigs.",
   "version": "1.0.0",
-  "skills": "./skills/"
+  "description": "24 zero-asset procedural 3D game-feel recipes (Three.js + GLSL + WebAudio) for visceral shooting, melee deflects, hitstop, arcade drifting, and trauma camera rigs.",
+  "license": "MIT",
+  "homepage": "https://dyc19991225.github.io/gamefeel-3d/",
+  "repository": "https://github.com/dyc19991225/gamefeel-3d",
+  "skills": "./skills/",
+  "author": {
+    "name": "dyc19991225"
+  },
+  "interface": {
+    "displayName": "GameFeel 3D",
+    "shortDescription": "Zero-asset 3D combat, drift, camera & WebAudio game feel.",
+    "longDescription": "Turn weightless vibecoded Three.js prototypes into tactile arcade-grade 3D games with 24 pure-code recipes: 2nd-order recoil springs, Sakurai asymmetric hitstop, Tamahagane deflect sparks, sub-stepped GLSL weapon trails, decoupled drift physics, Trauma² camera shake, and procedural WebAudio synthesizers.",
+    "developerName": "dyc19991225",
+    "category": "Developer Tools",
+    "capabilities": [],
+    "defaultPrompt": "Use $gamefeel-3d to upgrade my 3D web game's combat, camera, VFX, and procedural WebAudio feel."
+  }
 }

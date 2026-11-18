@@ -426,32 +426,50 @@ export class GameFeelStudioApp {
       }, 0);
     } else {
       const installCmd = `npx skills add dyc19991225/gamefeel-3d`;
-      const promptTxt = this.t(r.agentPrompt);
+      const codexPrompt = zh
+        ? `$gamefeel-3d ${this.t(r.agentPrompt).replace(/^使用 gamefeel-3d 技能：/, '')}`
+        : `$gamefeel-3d ${this.t(r.agentPrompt).replace(/^Use gamefeel-3d skill:\s*/i, '')}`;
+      const auditPrompt = zh
+        ? `$gamefeel-3d 对照 12 条反塑料感清单扫描我当前的 Three.js 项目，列出最缺失的手感通道，并按优先级逐项升级（震屏、顿帧、弹簧反馈与零 MP3 合成音效）。`
+        : `$gamefeel-3d Audit my current Three.js project against the 12-rule anti-slop checklist, rank the top missing feel channels, and upgrade them step by step.`;
       bodyHtml = `
         <div class="code-card">
           <div class="code-card-head">
-            <span>1. ${zh ? '安装 Agent Skill（Claude / Codex / AGY）' : 'Install Agent Skill'}</span>
+            <span>1. ${zh ? '安装 Skill（Codex / Claude / AGY）' : 'Install Skill (Codex / Claude / AGY)'}</span>
             <button class="copy-btn" id="btn-copy-install">${zh ? '复制命令' : 'Copy'}</button>
           </div>
           <pre class="code-pre">${installCmd}</pre>
         </div>
         <div class="code-card">
           <div class="code-card-head">
-            <span>2. ${zh ? '一键复制当前配方 Prompt' : 'Prompt for Coding Agent'}</span>
-            <button class="copy-btn" id="btn-copy-prompt">${zh ? '复制提示词' : 'Copy Prompt'}</button>
+            <span>2. ${zh ? 'Codex 风格当前配方引导词 ($gamefeel-3d)' : 'Codex-Style Recipe Prompt ($gamefeel-3d)'}</span>
+            <button class="copy-btn" id="btn-copy-prompt">${zh ? '复制引导词' : 'Copy Prompt'}</button>
           </div>
           <pre class="code-pre" id="gf-prompt-block"></pre>
+        </div>
+        <div class="code-card">
+          <div class="code-card-head">
+            <span>3. ${zh ? '全项目诊断改造引导词（通用）' : 'Full-Project Audit Starter Prompt'}</span>
+            <button class="copy-btn" id="btn-copy-audit">${zh ? '复制诊断词' : 'Copy Audit'}</button>
+          </div>
+          <pre class="code-pre" id="gf-audit-block"></pre>
         </div>
       `;
       setTimeout(() => {
         const pBlock = document.getElementById('gf-prompt-block');
-        if (pBlock) pBlock.textContent = promptTxt;
+        if (pBlock) pBlock.textContent = codexPrompt;
+        const aBlock = document.getElementById('gf-audit-block');
+        if (aBlock) aBlock.textContent = auditPrompt;
         document.getElementById('btn-copy-install')!.onclick = (e) => {
           void navigator.clipboard.writeText(installCmd);
           (e.target as HTMLElement).textContent = '✓';
         };
         document.getElementById('btn-copy-prompt')!.onclick = (e) => {
-          void navigator.clipboard.writeText(promptTxt);
+          void navigator.clipboard.writeText(codexPrompt);
+          (e.target as HTMLElement).textContent = zh ? '✓ 已复制!' : '✓ Copied!';
+        };
+        document.getElementById('btn-copy-audit')!.onclick = (e) => {
+          void navigator.clipboard.writeText(auditPrompt);
           (e.target as HTMLElement).textContent = zh ? '✓ 已复制!' : '✓ Copied!';
         };
       }, 0);

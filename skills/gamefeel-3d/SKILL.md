@@ -18,6 +18,16 @@ Most LLM-generated 3D games fail at game feel for five specific reasons:
 
 ---
 
+## Interactive Guided Entry (Codex-Style Onboarding)
+
+When the user invokes `$gamefeel-3d` or `gamefeel-3d` broadly without naming a specific mechanic, start with a brief, structured 3-option prompt (using `request_user_input` / `ask_question` if available, or numbered choices):
+
+1. **(Recommended) Audit & Upgrade Existing 3D Project** — Scan the current workspace against [`references/anti-slop-checklist.md`](references/anti-slop-checklist.md), report the top 3–5 missing feel channels, and apply surgical upgrades.
+2. **Inject a Specific Genre Feel Pack** — Choose **FPS Ballistics**, **Sekiro Melee & Hitstop**, **Arcade Kart Drift**, **Trauma² Camera & Bullet-Time**, or **Zero-MP3 WebAudio Synth**.
+3. **Scaffold a New Zero-Asset 3D Prototype** — Generate a playable Vite + Three.js + TypeScript arena pre-wired with dual-clock (`rawDt` / `scaledDt`), `Trauma²` camera rig, additive VFX forge, and compressor-backed WebAudio synth.
+
+---
+
 ## Workflow When Building or Polishing a 3D Game
 
 1. **Audit Against the Anti-Slop Checklist**: Read [`references/anti-slop-checklist.md`](references/anti-slop-checklist.md) first to spot missing tactile feedback channels (Visual + Kinetic + Temporal + Acoustic).

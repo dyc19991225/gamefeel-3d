@@ -36,8 +36,21 @@ Copy [`skills/gamefeel-3d`](skills/gamefeel-3d) into your project or global skil
 - **Codex / Universal Agents**: `.agents/skills/gamefeel-3d/`
 - **Antigravity**: `~/.gemini/antigravity/skills/gamefeel-3d/`
 
-Once installed, prompt your agent naturally:
-> *"Use `gamefeel-3d` to give my Three.js katana combat Sekiro-style perfect deflect sparks, 65ms asymmetric hitstop, sub-stepped GLSL blade trails, and zero-MP3 Tamahagane steel clash audio."*
+Once installed, invoke with Codex `$gamefeel-3d` starter prompts or natural language:
+
+```text
+# 1. Interactive Guided Audit (Codex / Claude Code / Antigravity)
+$gamefeel-3d 对照 12 条反塑料感清单扫描我当前的 Three.js 项目，列出最缺失的手感通道并分步升级。
+
+# 2. Sekiro Melee & Hitstop Pack
+$gamefeel-3d 给我的近战战斗注入 34 颗火花完美弹反、65ms 非对称顿帧、子步插值 GLSL 刀光与零 MP3 玉钢刀鸣。
+
+# 3. FPS Recoil & Sniper Pack
+$gamefeel-3d 为步枪和狙击枪添加二阶弹簧后坐力、瞬狙开镜 Q 切取消后摇、木箱穿透衰减与连杀升调爆头叮声。
+
+# 4. Arcade Drift & Speed Pack
+$gamefeel-3d 实现车头/速度解耦漂移侧滑、蓝紫金三阶胎火、CWW 氮气广角畸变速度线与落地悬挂挤压。
+```
 
 ---
 

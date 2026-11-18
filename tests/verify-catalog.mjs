@@ -6,6 +6,7 @@ const root = process.cwd();
 
 const requiredFiles = [
   'skills/gamefeel-3d/SKILL.md',
+  'skills/gamefeel-3d/agents/openai.yaml',
   'skills/gamefeel-3d/references/anti-slop-checklist.md',
   'skills/gamefeel-3d/references/fps-ballistics.md',
   'skills/gamefeel-3d/references/melee-combat.md',
